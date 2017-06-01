@@ -6,7 +6,7 @@ The data is in 'input/' and for convenience, I use the movielens data.
 The data is too large to upload, so, if you want to download the data, [click here](https://grouplens.org/datasets/movielens/) or email me: zhangyuyang4d@163.com
 
 ## My Paper
-When I study the deep learning in NLP, I found word2vec can be used in recommendation system.
+When I study the deep learning in NLP, I find word2vec can be used in recommendation system.
 And according to [1,2,3], I try to model with MovieLens data. 
 However... when I read [4], I find this has been done...Orz.
 Luckily, the details of my model are different. 
