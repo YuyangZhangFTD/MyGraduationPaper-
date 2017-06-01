@@ -5,101 +5,138 @@ import numpy as np
 import RecTool as rt
 
 
-def get_common(para_m, para_p1, para_p2):
+def get_common(para_m, para_x_dict, para_1, para_2):
     """
-        Get common item between para_p1 and para_p2
+        Get common item between para_1 and para_2
     :param para_m:      rating matrix
-    :param para_p1:     user 1
-    :param para_p2:     user 2
-    :return :           a list of common item of 2 users
+    :param para_x_dict: dict record by user or item
+    :param para_1:      user 1 or item 1
+    :param para_2:      user 2 or item 2
+    :return :           a list of common things.
     """
-    p1_list = []
-    p2_list = []
-    for k in para_m[para_p1].keys():
-        p1_list.append(k[1])
-    for k in para_m[para_p2].keys():
-        p2_list.append(k[1])
+    list_1 = para_x_dict[para_1]
+    list_2 = para_x_dict[para_2]
     com_list = []
-    for item in p1_list:
-        if item in p2_list:
-            com_list.append(item)
+    for k1, __ in list_1:
+        for k2, __ in list_2:
+            if k1 == k2:            # instead of using dict here
+                com_list.append(k1)
     return com_list
 
 
-def sim_distance(para_m, para_p1, para_p2):
+def sim_distance(para_m, para_x_dict, para_1, para_2, user_based=True):
     """
-        compute similarity by distance
+     compute similarity by distance
     :param para_m:      rating matrix
-    :param para_p1:     user 1
-    :param para_p2:     user 2
+    :param para_x_dict: dict record by user or item
+    :param para_1:      user 1 or item 1
+    :param para_2:      user 2 or item 2
+    :param user_based:  based on user or item
     :return :           similarity(scalar)
     """
-    com_list = get_common(para_m, para_p1, para_p2)
+    com_list = get_common(para_m, para_x_dict, para_1, para_2)
     if len(com_list) == 0:
         return 0.0      
-    sum_square = sum([(para_m[para_p1, x]-para_m[para_p2, x])**2 for x in com_list])
+    if user_based:
+        sum_square = sum([(para_m[para_1, x]-para_m[para_2, x])**2 for x in com_list])
+    else:
+        sum_square = sum([(para_m[x, para_1]-para_m[x, para_2])**2 for x in com_list])
     return 1/(1 + np.sqrt(sum_square))
 
 
-def sim_pearson(para_m, para_p1, para_p2):
+def sim_pearson(para_m, para_x_dict, para_1, para_2, user_based=True):
     """
         compute similarity by pearson coefficient
     :param para_m:      rating matrix
-    :param para_p1:     user 1
-    :param para_p2:     user 2
+    :param para_x_dict: dict record by user or item    
+    :param para_1:      user 1 or item 1
+    :param para_2:      user 2 or item 2
+    :param user_based:  based on user or item
     :return :           similarity(scalar)
     """
-    com_list = get_common(para_m, para_p1, para_p2)
+    com_list = get_common(para_m, para_x_dict, para_1, para_2)
     if len(com_list) == 0:
-        return 0.0    
+        return 0.0
     n = len(com_list)
-    sum1 = sum([para_m[para_p1, x] for x in com_list])
-    sum2 = sum([para_m[para_p2, x] for x in com_list])
-    sum1Sq = sum([pow(para_m[para_p1, x],2) for x in com_list])
-    sum2Sq = sum([pow(para_m[para_p2, x],2) for x in com_list])
-    pSum = sum([para_m[para_p1, x]*para_m[para_p2, x] for x in com_list])
+    if user_based:
+        sum1 = sum([para_m[para_1, x] for x in com_list])
+        sum2 = sum([para_m[para_2, x] for x in com_list])
+        sum1Sq = sum([pow(para_m[para_1, x],2) for x in com_list])
+        sum2Sq = sum([pow(para_m[para_2, x],2) for x in com_list])
+        pSum = sum([para_m[para_1, x]*para_m[para_2, x] for x in com_list])
+    else:
+        sum1 = sum([para_m[x, para_1] for x in com_list])
+        sum2 = sum([para_m[x, para_2] for x in com_list])
+        sum1Sq = sum([pow(para_m[x, para_1],2) for x in com_list])
+        sum2Sq = sum([pow(para_m[x, para_2],2) for x in com_list])
+        pSum = sum([para_m[x, para_1]*para_m[x, para_2] for x in com_list])
     num = pSum - (sum1 * sum2 / n)
     den = np.sqrt((sum1Sq-pow(sum1,2)/n) * (sum2Sq-pow(sum2,2)/n))
     if den==0: 
         return 0
-    r=num/den
-    return r
-
-
-def sim_cos(para_m, para_p1, para_p2):
-    """
-        compute similarity by cosin distance
-    :param para_m:      rating matrix
-    :param para_p1:     user 1
-    :param para_p2:     user 2
-    :return :           similarity(scalar)
-    """
-    com_list = get_common(para_m, para_p1, para_p2)
-    if len(com_list) == 0:
-        return 0.0    
-    vec1 = [para_m[para_p1, x] for x in com_list]
-    vec2 = [para_m[para_p2, x] for x in com_list]
-    num = sum([para_m[para_p1, x] * para_m[para_p2, x] for x in com_list])
-    den = np.sqrt(sum([para_m[para_p1, x]**2 for x in com_list])) \
-            * np.sqrt(sum([para_m[para_p2, x]**2 for x in com_list]))
     return num/den
 
 
+def sim_cos(para_m, para_x_dict, para_1, para_2, user_based=True):
+    """
+        compute similarity by cosin distance
+    :param para_m:      rating matrix
+    :param para_x_dict: dict record by user or item
+    :param para_1:      user 1 or item 1
+    :param para_2:      user 2 or item 2
+    :param user_based:  based on user or item
+    :return :           similarity(scalar)
+    """
+    com_list = get_common(para_m, para_x_dict, para_1, para_2)
+    if len(com_list) == 0:
+        return 0.0
+    if user_based:
+        vec1 = [para_m[para_1, x] for x in com_list]
+        vec2 = [para_m[para_2, x] for x in com_list]
+        num = sum([para_m[para_1, x] * para_m[para_2, x] for x in com_list])
+        den = np.sqrt(sum([para_m[para_1, x]**2 for x in com_list])) \
+            * np.sqrt(sum([para_m[para_2, x]**2 for x in com_list]))
+    else:
+        vec1 = [para_m[x, para_1] for x in com_list]
+        vec2 = [para_m[x, para_2] for x in com_list]
+        num = sum([para_m[x, para_1] * para_m[x, para_2] for x in com_list])
+        den = np.sqrt(sum([para_m[x, para_2]**2 for x in com_list])) \
+            * np.sqrt(sum([para_m[x, para_2]**2 for x in com_list]))
+    return num/den
 
 
-def compute_sim(para_m, para_n_sim=50, para_sim=sim_pearson, user_based=True):
+@rt.fn_timer
+def compute_sim(para_m, para_user_dict, para_item_dict, para_sim=sim_pearson, user_based=True):
     """
         Compute similarity matrix
     :param para_m:      rating matrix
-    :param para_n_sim:  the number of similar users
     :param para_sim:    the function that measures the similarity
     :return :           the similarity matrix
     """
-    
-    return None
+    num_user, num_item = para_m.shape
+    if user_based:
+        sim = np.zeros([num_user, num_user])
+        x_dict = para_user_dict
+    else:
+        x_dict = para_item_dict
+        sim = np.zeros([num_item, num_item])
+    key_list = x_dict.keys()
+    for k1 in key_list:
+        for k2 in key_list:
+            if k1 == k2:
+                sim[k1,k2] = 1
+            else:
+                if sim[k2,k1] != 0:
+                    sim[k1,k2] = sim[k2,k1]
+                else:
+                    # calculate similarity
+                    sim[k1, k2] = para_sim(para_m, x_dict, k1, k2, user_based=user_based)
+    return sim
 
 
-def pred(para_m, para_test, para_n_sim=50, para_sim=sim_pearson, user_based=True):
+@rt.fn_timer
+def pred(para_m, para_test, para_user_dict, para_item_dict, \
+            para_n_sim=3, para_sim=sim_pearson, user_based=True):
     """
         predict on the test data
     :param para_m:      rating matrix
@@ -108,51 +145,55 @@ def pred(para_m, para_test, para_n_sim=50, para_sim=sim_pearson, user_based=True
     :param para_sim:    the function that measures the similarity
     :return:            get the prediction
     """
-    sim_matrix = compute_sim(para_m, para_n_sim=para_n_sim, para_sim=para_sim, user_based=user_based)
-    
-    return None
+    sim_matrix = compute_sim(para_m, para_user_dict, para_item_dict, \
+                                para_sim=para_sim, user_based=user_based)
+    res = []
+    random_count = 0
 
-
-
-
-# =========================== Maybe not useful things =====================================
-def recommend(para_m, para_p, para_n_sim=50, para_n_rec=50, para_sim=sim_pearson):
-    sim_u = get_top(para_m, para_p, para_n=para_n_sim, para_sim=sim_pearson)
-    # TODO
-    return None
-
-
-def get_top(para_m, para_p1, para_n=50, para_sim=sim_pearson):
-    """
-        get top similar user
-    :param para_m:      rating matrix
-    :param para_p1:     user 1
-    :param para_p2:     user 2
-    :param para_n_sim:  the number of similar users
-    :param para_sim:    the function that measures the similarity  
-    :return :           a list record the most similar users  
-    """
-    num_user, num_item = para_m.shape
-    scores=[(para_sim(para_m, para_p1, x), x) for x in range(num_user) if x != para_p1] 
-    scores.sort()
-    scores.reverse()
-    return [x[1] for x in scores[0:para_n]]
-
-
-def pred_one(para_m, para_p, para_i, para_n_sim=50, para_sim=sim_pearson):
-    """
-        predict the score of item i rated by user i based on similar users
-    :param para_m:      rating matrix
-    :param para_p:      user
-    :param para_i:      item
-    :param para_n_sim:  the number of similar users
-    :param para_sim:    the function that measures the similarity
-    :return :           get the prediction
-    """
-    sim_u = get_top(para_m, para_p, para_n=para_n_sim, para_sim=sim_pearson)
-    com_list = [x for x in sim_u if para_m[x, para_i] != 0]
-    if len(com_list) == 0:
-        # with no common item, calculate the average score
-        return np.sum(para_m[:, para_i])/para_m[:,para_i].getnnz()
+    if user_based:
+        for test in para_test:
+            user = test[0]
+            item = test[1]
+            try:
+                neighbors = [(x, sim_matrix[user, x], r) for (x, r) in para_item_dict[item]]
+                neighbors = sorted(neighbors, key=lambda tple: tple[1], reverse=True)
+                sum_sim = sum_ratings = actual_k = 0
+                for (_, sim, r) in neighbors[:para_n_sim]:
+                    if sim > 0:
+                        sum_sim += sim
+                        sum_ratings += sim * r
+                        actual_k += 1
+                if actual_k < para_n_sim:
+                    print("Not enough similar users!")
+                    print("User: "+str(user)+"  Item: "+str(item))       
+                res.append([user, item, sum_ratings/sum_sim])
+            except:
+                print("Random rating")
+                print("User: "+str(user)+"  Item: "+str(item))  
+                random_count += 1
+                res.append([user, item, np.random.uniform(1,5)])
     else:
-        return sum([para_m[x, para_i] for x in com_list]) / len(com_list)
+        for test in para_test:
+            user = test[0]
+            item = test[1]
+            try:
+                neighbors = [(x, sim_matrix[item, x], r) for (x, r) in para_user_dict[user]]
+                neighbors = sorted(neighbors, key=lambda tple: tple[1], reverse=True)
+                sum_sim = sum_ratings = actual_k = 0
+                for (_, sim, r) in neighbors[:para_n_sim]:
+                    if sim > 0:
+                        sum_sim += sim
+                        sum_ratings += sim * r
+                        actual_k += 1
+                if actual_k < para_n_sim:
+                    print("Not enough similar users!")
+                    print("User: "+str(user)+"  Item: "+str(item))       
+                res.append([user, item, sum_ratings/sum_sim])
+            except:
+                print("Random rating")
+                print("User: "+str(user)+"  Item: "+str(item))  
+                random_count += 1
+                res.append([user, item, np.random.uniform(1,5)])
+    print("Random count:  "+str(random_count))
+    return res
+

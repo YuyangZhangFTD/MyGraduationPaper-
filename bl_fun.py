@@ -5,12 +5,17 @@ import numpy as np
 import RecTool as rt 
 
 
+@rt.fn_timer
 def get_mu(para_m):
     """
         Get the average of all data
+    :param para_m:      rating matrix
+    :return:            the average of all data
     """
     return sum(para_m.values())/para_m.getnnz()
 
+
+@rt.fn_timer
 def get_ave_bu(para_m, para_mu):
     """
         Get the bias of each user by average
@@ -22,6 +27,7 @@ def get_ave_bu(para_m, para_mu):
     return [sum(para_m[i,:].values())/para_m[i,:].getnnz()-para_mu for i in range(num_user)]
 
 
+@rt.fn_timer
 def get_ave_bi(para_m, para_mu):
     """
         Get the bias of each item by average
@@ -40,11 +46,18 @@ def get_ave_bi(para_m, para_mu):
     return bi_list
 
 
+@rt.fn_timer
 def get_bu_bi(para_m, para_mu, epoch_n=100, learning_rate=0.01, reg=0.1):
     """
         Use SGD to get bu and bi
         Minimize the loss:
             \min_{b*} \sum{(r_{ij}-\mu-b_u-b_i)^2 + \lambda_1(\sum{b_u}^2 + \sum{b_i}^2)}
+    :param para_m:          rating matrix
+    :param para_mu:         the average of all data
+    :param epoch_n:         iteration times, default 100
+    :param learning_rate:   learning rate, default 0.01
+    :param reg:             regularization coefficient
+    :return:                bias of user and item
     """
     num_user, num_item = para_m.shape
     bu = np.zeros([num_user, 1]) 
@@ -57,9 +70,10 @@ def get_bu_bi(para_m, para_mu, epoch_n=100, learning_rate=0.01, reg=0.1):
     return bu, bi
 
 
-def pred(para_m, para_test, para_mu, para_bu, para_bi):
+@rt.fn_timer
+def pred(para_m, para_test, epoch_n=100, learning_rate=0.01, reg=0.1):
     """
-        predict on the test data
+        Predict on the test data
     :param para_m:      rating matrix
     :param para_test:   test_data
     :param para_mu:     the average of all score
@@ -67,8 +81,10 @@ def pred(para_m, para_test, para_mu, para_bu, para_bi):
     :param para_bi:     the bias of all item
     :return :           get the prediction score
     """
+    mu = get_mu(para_m)
+    bu, bi = get_bu_bi(para_m, mu, epoch_n=epoch_n, learning_rate=learning_rate, reg=reg)
     res = []
     for i in range(len(para_test)):
-        hat = para_mu + para_bu[para_test[i][0]] + para_bi[para_test[i][1]]
+        hat = mu + bu[para_test[i][0]] + bi[para_test[i][1]]
         res.append([para_test[i][0], para_test[i][1], hat]) 
     return res
