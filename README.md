@@ -13,8 +13,9 @@ Luckily, the details of my model are different.
 As a undergraduate student, I try my best...
 
 ## Details
-I call this model as Item2Vec++(Item to Vector plus)...XDDDD
-And the details of model can be viewed in [4.1item2vec+](https://github.com/YuyangZhangFTD/MyGraduationPaper-/blob/master/4.1Item2Vec%2B.pdf).
+I call this model as Item2Vec++(Item to Vector plus)...XDDDD.
+
+And the details of model can be viewed in [4.1item2vec+.pdf](https://github.com/YuyangZhangFTD/MyGraduationPaper-/blob/master/4.1Item2Vec%2B.pdf).
 
 As for the code, the cf represents the collaborative filter, the mf represents the matrix factorization and the bl represents the baseline.
 Run **_main.py to test, and **_fun.py contain the functions of ** method.
